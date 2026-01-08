@@ -1,3 +1,5 @@
+// admin.js (최종본)
+
 const list = document.getElementById("list");
 
 const OWNER = "soopbr";
@@ -8,23 +10,28 @@ const BRANCH = "main";
 let questions = [];
 let sha = "";
 
-// 🔽 질문 불러오기
+/* =========================
+   질문 불러오기
+========================= */
 async function loadQuestions() {
   const token = document.getElementById("token").value;
   if (!token) {
-    alert("토큰을 입력하세요");
+    alert("GitHub 토큰을 입력하세요");
     return;
   }
 
+  // 1️⃣ GitHub에서 questions.json 읽기
   const res = await fetch(
     `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE_PATH}`,
     {
-      headers: { Authorization: `token ${token}` }
+      headers: {
+        Authorization: `token ${token}`
+      }
     }
   );
 
   if (!res.ok) {
-    alert("토큰 오류 또는 권한 없음");
+    alert("GitHub에서 질문을 불러오지 못했습니다.");
     return;
   }
 
@@ -34,33 +41,57 @@ async function loadQuestions() {
   questions = content.questions;
   sha = file.sha;
 
+  // 2️⃣ localStorage에 있는 대기 질문 합치기
+  const pending =
+    JSON.parse(localStorage.getItem("pendingQuestions") || "[]");
+
+  if (pending.length > 0) {
+    questions = [...pending, ...questions];
+    localStorage.removeItem("pendingQuestions");
+  }
+
   render();
 }
 
-// 🔽 화면 출력
+/* =========================
+   화면 렌더링
+========================= */
 function render() {
   list.innerHTML = "";
 
-  questions.forEach((q, i) => {
+  if (questions.length === 0) {
+    list.innerHTML = "<p>질문이 없습니다.</p>";
+    return;
+  }
+
+  questions.forEach((q, index) => {
     const div = document.createElement("div");
     div.className = "admin-item";
     div.innerHTML = `
       <span>${q.text}</span>
-      <button onclick="approve(${i})">${q.approved ? "✔ 승인됨" : "승인"}</button>
-      <button onclick="removeQ(${i})">삭제</button>
+      <div>
+        <button onclick="approve(${index})">
+          ${q.approved ? "✔ 승인됨" : "승인"}
+        </button>
+        <button onclick="removeQ(${index})">삭제</button>
+      </div>
     `;
     list.appendChild(div);
   });
 }
 
-// 🔽 GitHub 저장
+/* =========================
+   GitHub에 저장
+========================= */
 async function saveQuestions() {
   const token = document.getElementById("token").value;
 
   const body = {
     message: "update questions",
-    content: btoa(JSON.stringify({ questions }, null, 2)),
-    sha,
+    content: btoa(
+      JSON.stringify({ questions }, null, 2)
+    ),
+    sha: sha,
     branch: BRANCH
   };
 
@@ -76,29 +107,37 @@ async function saveQuestions() {
     }
   );
 
+  if (!res.ok) {
+    alert("GitHub 저장 실패");
+    return;
+  }
+
   const result = await res.json();
   sha = result.content.sha;
 }
 
-// 🔽 승인 / 삭제
-async function approve(i) {
-  questions[i].approved = true;
+/* =========================
+   승인 / 삭제
+========================= */
+async function approve(index) {
+  questions[index].approved = true;
   render();
   await saveQuestions();
 }
 
-async function removeQ(i) {
-  if (confirm("삭제할까요?")) {
-    questions.splice(i, 1);
-    render();
-    await saveQuestions();
-  }
+async function removeQ(index) {
+  if (!confirm("이 질문을 삭제할까요?")) return;
+  questions.splice(index, 1);
+  render();
+  await saveQuestions();
 }
 
-// 🔽 드래그 순서 변경
+/* =========================
+   드래그 순서 변경
+========================= */
 new Sortable(list, {
   animation: 150,
-  onEnd: async evt => {
+  onEnd: async function (evt) {
     const item = questions.splice(evt.oldIndex, 1)[0];
     questions.splice(evt.newIndex, 0, item);
     render();
