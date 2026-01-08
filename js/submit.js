@@ -1,10 +1,21 @@
+// 🔑 기기 고유 ID 생성
+function getUserId() {
+  let id = localStorage.getItem("userId");
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem("userId", id);
+  }
+  return id;
+}
+
 function submitQuestion() {
+  const userId = getUserId();
   const questions = JSON.parse(localStorage.getItem("questions") || "[]");
 
-  // 🔥 이 브라우저에서 작성한 질문이 이미 있는지 검사
-  const myQuestionExists = questions.some(q => q.fromMe === true);
+  // ✅ 이 기기에서 이미 질문했는지 확인
+  const alreadySubmitted = questions.some(q => q.authorId === userId);
 
-  if (myQuestionExists) {
+  if (alreadySubmitted) {
     alert("이미 질문을 제출했습니다.");
     return;
   }
@@ -19,7 +30,7 @@ function submitQuestion() {
     id: Date.now(),
     text,
     approved: false,
-    fromMe: true   // ⭐ 이 브라우저에서 작성 표시
+    authorId: userId   // ⭐ 핵심
   });
 
   localStorage.setItem("questions", JSON.stringify(questions));
