@@ -1,15 +1,16 @@
-const questions = JSON.parse(localStorage.getItem("questions") || "[]")
-  .filter(q => q.approved);
-
+let approved = [];
 let index = 0;
-const box = document.getElementById("questionText");
+
+async function load() {
+  const res = await fetch("data/questions.json");
+  const data = await res.json();
+  approved = data.questions.filter(q => q.approved);
+  render();
+}
 
 function render() {
-  if (questions.length === 0) {
-    box.innerText = "승인된 질문이 없습니다.";
-    return;
-  }
-  box.innerText = questions[index].text;
+  document.getElementById("q").innerText =
+    approved.length ? approved[index].text : "승인된 질문 없음";
 }
 
 function prev() {
@@ -18,15 +19,15 @@ function prev() {
 }
 
 function next() {
-  if (index < questions.length - 1) index++;
+  if (index < approved.length - 1) index++;
   render();
 }
 
 function speak() {
-  if (!questions.length) return;
-  const msg = new SpeechSynthesisUtterance(questions[index].text);
+  if (!approved.length) return;
+  const msg = new SpeechSynthesisUtterance(approved[index].text);
   msg.lang = "ko-KR";
   speechSynthesis.speak(msg);
 }
 
-render();
+load();
