@@ -1,32 +1,23 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>질문 검토</title>
-  <link rel="stylesheet" href="css/style.css">
 </head>
+<body>
 
-<body class="dark">
+  <h2>질문 검토</h2>
 
-  <h2 style="text-align:center;">질문 검토</h2>
+  <input
+    type="password"
+    id="token"
+    placeholder="GitHub Personal Access Token"
+  />
+  <button onclick="loadQuestions()">질문 불러오기</button>
 
-  <!-- 🔐 토큰 입력 영역 -->
-  <div style="text-align:center; margin-bottom:20px;">
-    <input
-      type="password"
-      id="token"
-      placeholder="GitHub Personal Access Token"
-      style="width:300px; padding:8px;"
-    />
-    <button onclick="loadQuestions()">질문 불러오기</button>
-  </div>
+  <div id="list"></div>
 
-  <!-- 📋 질문 리스트 -->
-  <div id="list" class="admin-list"></div>
-
-  <!-- JS 파일 -->
   <script src="js/admin.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-
 </body>
 </html>
