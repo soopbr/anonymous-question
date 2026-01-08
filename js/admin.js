@@ -7,6 +7,7 @@ function render() {
   questions.forEach((q, index) => {
     const div = document.createElement("div");
     div.className = "admin-item";
+    div.dataset.index = index;
 
     div.innerHTML = `
       <span>${q.text}</span>
@@ -37,3 +38,14 @@ function removeQ(i) {
 }
 
 render();
+
+/* 🔥 드래그 정렬 */
+new Sortable(list, {
+  animation: 150,
+  onEnd: function (evt) {
+    const movedItem = questions.splice(evt.oldIndex, 1)[0];
+    questions.splice(evt.newIndex, 0, movedItem);
+    localStorage.setItem("questions", JSON.stringify(questions));
+    render();
+  }
+});
