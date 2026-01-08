@@ -1,4 +1,4 @@
-// 🔑 기기 고유 ID 생성
+// 사용자 고유 ID
 function getUserId() {
   let id = localStorage.getItem("userId");
   if (!id) {
@@ -8,33 +8,35 @@ function getUserId() {
   return id;
 }
 
-function submitQuestion() {
+async function submitQuestion() {
+  const text = document.getElementById("question").value.trim();
+  if (!text) {
+    alert("질문을 입력하세요");
+    return;
+  }
+
   const userId = getUserId();
-  const questions = JSON.parse(localStorage.getItem("questions") || "[]");
 
-  // ✅ 이 기기에서 이미 질문했는지 확인
-  const alreadySubmitted = questions.some(q => q.authorId === userId);
+  // GitHub에 있는 질문 읽기
+  const res = await fetch(
+    "https://raw.githubusercontent.com/soopbr/anonymous-question/main/data/questions.json"
+  );
+  const data = await res.json();
 
-  if (alreadySubmitted) {
+  // 같은 기기 중복 제출 방지
+  const already = data.questions.some(q => q.authorId === userId);
+  if (already) {
     alert("이미 질문을 제출했습니다.");
     return;
   }
 
-  const text = document.getElementById("question").value.trim();
-  if (!text) {
-    alert("질문을 입력해주세요.");
-    return;
-  }
-
-  questions.push({
+  data.questions.push({
     id: Date.now(),
     text,
     approved: false,
-    authorId: userId   // ⭐ 핵심
+    authorId: userId
   });
 
-  localStorage.setItem("questions", JSON.stringify(questions));
-
-  alert("질문이 제출되었습니다!");
+  alert("질문이 제출되었습니다!\n관리자 승인 대기 중입니다.");
   document.getElementById("question").disabled = true;
 }
